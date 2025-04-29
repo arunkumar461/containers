@@ -1,4 +1,4 @@
 // slidev.config.ts
 export default {
-    base: '/containers/',
-  }
+  base: '/containers/',
+}
