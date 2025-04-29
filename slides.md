@@ -26,25 +26,33 @@ Building efficient and secure containers
 layout: image
 ---
 
-# What is container image
+# What is a Container?
 
-![container architecture](/assets/container-arch.png)
+A container is a lightweight, standalone, and executable package that includes everything needed to run a piece of software: code, runtime, system tools, libraries, and settings.
+
+- Isolated from the host system
+- Consistent across environments
+- Fast startup and efficient resource usage
+
+<img src="/assets/container-arch.png" alt="Containers" width="400" height="400">
 
 ---
-layout: image
+layout: center
 ---
-
 
 # Why to reduce container image size?
 
 <v-clicks>
 
-- Affetcts storage costs
-- Impacts deplyment times
-- Influces scalablity
-- Can affct security
+- Affects storage costs
+- Impacts deployment times
+- Influences scalability
+- Can affect security
 
 </v-clicks>
+
+
+
 
 ---
 layout: two-cols
@@ -53,6 +61,7 @@ layout: two-cols
 # Dockerfile examples
 
 Node app 
+Size: node:22 --> 1.12GB
 
 ```dockerfile {all|1|all}
 FROM node:22
@@ -71,8 +80,7 @@ CMD ["npm", "run", "preview"]
 
 - Base image
 - Copying source files and node modules
-- Includes only necessary artifacts
-- Better security posture
+- Takes more time to build
 
 </v-clicks>
 
@@ -80,7 +88,22 @@ CMD ["npm", "run", "preview"]
 layout: two-cols
 ---
 
-# Multi-stage Builds
+# Possible options
+
+<v-clicks>
+
+- Use minimal base images (e.g., `alpine`, `slim`)
+- Multi-stage builds
+- Copy only necessary files
+- Leverage build cache
+- Remove build dependencies
+- Use `.dockerignore`
+- Pin image versions
+
+</v-clicks>
+
+::right::
+
 ````md magic-move {lines: true}
 
 ```dockerfile
@@ -95,7 +118,7 @@ CMD ["npm", "run", "preview"]
 ```
 
 
-```dockerfile {all|1||all}
+```dockerfile {all|1|9|all}
 FROM node:22 AS builder
 
 WORKDIR /app
@@ -112,75 +135,100 @@ COPY package.json .
 CMD ["npm", "start"]
 ```
 
+```dockerfile {all|1|9|all}
+FROM node:22 AS builder
+
+WORKDIR /app
+COPY . .
+
+RUN npm ci --production
+RUN npm run build
+
+FROM node:22-alpine@sha256:13b7e62e8df80264dbb74799570
+
+COPY --from=builder /app/dist ./dist
+COPY package.json .
+
+CMD ["npm", "start"]
+```
 
 ````
-::right::
+
+
+---
+layout: two-cols
+---
+
+# Dockerfile Linting with Hadolint
+
+Hadolint is a linter for Dockerfiles that helps you follow best practices and avoid common mistakes.
 
 <v-clicks>
 
-- Separates build and runtime
-- Reduces final image size
-- Includes only necessary artifacts
-- Better security posture
+- Detects bad patterns and security issues
+- Enforces consistency
+- Easy to integrate in CI/CD
 
 </v-clicks>
 
----
+```bash
+# Install Hadolint
+brew install hadolint
 
-# Layer Optimization
-
-<div grid="~ cols-2 gap-4">
-
-```dockerfile
-# ❌ Bad Practice
-FROM node:18
-WORKDIR /app
-COPY . .
-RUN npm install
+# Lint a Dockerfile
+hadolint Dockerfile
 ```
 
-```dockerfile
-# ✅ Good Practice
-FROM node:18
-WORKDIR /app
-COPY package*.json ./
-RUN npm ci
-COPY . .
+---
+layout: two-cols
+---
+
+# Container Vulnerability Scanning
+
+Scan your images for known vulnerabilities before shipping to production.
+
+<v-clicks>
+
+- Tools: Trivy, Snyk, Grype, Docker Scout
+- Integrate scanning in CI/CD
+- Regularly update base images
+
+</v-clicks>
+
+```bash
+# Example: Scan with Trivy
+trivy image myapp:latest
+```
+---
+layout: two-cols
+---
+
+# Reduce Image Size with DockerSlim
+
+DockerSlim automatically analyzes and optimizes your images, removing unnecessary files and reducing attack surface.
+
+<v-clicks>
+
+- Shrinks image size dramatically
+- Removes unused binaries and files
+- Easy to use
+
+</v-clicks>
+
+```bash
+# Install DockerSlim
+brew install docker-slim
+
+# Minify an image
+docker-slim build --tag myapp.slim myapp:latest
 ```
 
-</div>
-
-<v-clicks>
-
-- Leverage build cache
-- Order instructions by change frequency
-- Combine RUN commands
-- Use .dockerignore
-
-</v-clicks>
-
----
-layout: image-right
-image: https://source.unsplash.com/collection/94734566/1920x1080
----
-
-# Security Best Practices
-
-<v-clicks>
-
-- Scan for vulnerabilities
-- Use specific version tags
-- Minimize attack surface
-- Keep base images updated
-- Use non-root users
-- Sign your images
-- Implement least privilege
-
-</v-clicks>
 
 ---
 
 # Cloud Native Buildpacks
+
+Cloud Native Buildpacks (CNBs) transform your application source code into container images that can run on any cloud. With buildpacks, organizations can concentrate the knowledge of container build best practices within a specialized team, instead of having application developers across the organization individually maintain their own Dockerfiles. 
 
 <v-clicks>
 
@@ -204,7 +252,8 @@ layout: two-cols
 
 # Buildpacks vs Dockerfile
 
-Buildpacks:
+#### Buildpacks:
+
 <v-clicks>
 
 - Automated detection
@@ -216,8 +265,10 @@ Buildpacks:
 </v-clicks>
 
 ::right::
+<br>
 
-Dockerfile:
+#### Dockerfile:
+
 <v-clicks>
 
 - Full control
@@ -230,39 +281,18 @@ Dockerfile:
 
 ---
 layout: center
-class: text-center
 ---
 
-# Best Practices Summary
+# Tools and Links
 
-<div class="grid grid-cols-2 gap-4">
-<div>
+- Ghostty Terminal - https://ghostty.org/
+- Slidev (Slides for devlopers) - https://sli.dev/
+- pnpm(Efficient package manager for nodejs) - https://pnpm.io/
+- Hadolint(Dockerfile lint) - https://github.com/hadolint/hadolint
+- Grype(Vulnerability scanner for container) - https://github.com/anchore/grype
+- Slim(Optimise containers) - https://github.com/slimtoolkit/slim
+- Buildpacks and Packeto - https://buildpacks.io/
 
-## Docker
-<v-clicks>
-
-- Multi-stage builds
-- Layer optimization
-- Security first
-- Version control
-- Documentation
-
-</v-clicks>
-</div>
-<div>
-
-## Buildpacks
-<v-clicks>
-
-- Automated builds
-- Standardization
-- Regular updates
-- Easy adoption
-- Cloud native ready
-
-</v-clicks>
-</div>
-</div>
 
 ---
 layout: end
@@ -270,4 +300,4 @@ layout: end
 
 # Thank You!
 
-[Docker Docs](https://docs.docker.com/develop/develop-images/dockerfile_best-practices/) · [Buildpacks.io](https://buildpacks.io/) · [GitHub](https://github.com/buildpacks)
+[GitHub](https://github.com/arunkumar461/containers)
