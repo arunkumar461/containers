@@ -1,6 +1,6 @@
 ---
 theme: seriph
-background: https://source.unsplash.com/collection/94734566/1920x1080
+background: /assets/bg2.png
 class: 'text-center'
 highlighter: shiki
 lineNumbers: true
